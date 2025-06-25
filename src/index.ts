@@ -1,14 +1,15 @@
-import { renderHtml } from "./renderHtml";
+import { Hono } from 'hono';
 
-export default {
-  async fetch(request, env) {
-    const stmt = env.DB.prepare("SELECT * FROM comments LIMIT 3");
-    const { results } = await stmt.all();
+type Bindings = {
+  DB: D1Database;
+}
 
-    return new Response(renderHtml(JSON.stringify(results, null, 2)), {
-      headers: {
-        "content-type": "text/html",
-      },
-    });
-  },
-} satisfies ExportedHandler<Env>;
+const app = new Hono<{ Bindings: Bindings }>();
+
+app.get('/', async (c) => {
+  const stmt = c.env.DB.prepare("SELECT * FROM comments LIMIT 3");
+  const { results } = await stmt.all();
+  return c.json(results);
+});
+
+export default app;
